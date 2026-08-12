@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="440" viewBox="0 0 1120 440" role="img" aria-labelledby="title desc">
+  <title id="title">Detector defensive architecture</title>
+  <desc id="desc">The command-line and desktop interfaces call the read-only Detector Core scanners, which produce findings and JSONL reports.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#172554"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".28"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#60a5fa"/></marker>
+  </defs>
+  <rect width="1120" height="440" rx="24" fill="url(#bg)"/>
+  <text x="56" y="62" fill="#f8fafc" font-family="Segoe UI,Arial" font-size="30" font-weight="700">Detector</text>
+  <text x="56" y="94" fill="#94a3b8" font-family="Segoe UI,Arial" font-size="17">Defensive, read-only Windows analysis pipeline</text>
+  <g filter="url(#shadow)" font-family="Segoe UI,Arial">
+    <rect x="56" y="145" width="205" height="92" rx="14" fill="#1e293b" stroke="#475569"/>
+    <text x="158" y="183" text-anchor="middle" fill="#f8fafc" font-size="19" font-weight="600">CLI</text><text x="158" y="210" text-anchor="middle" fill="#94a3b8" font-size="14">Commands + JSONL</text>
+    <rect x="56" y="270" width="205" height="92" rx="14" fill="#1e293b" stroke="#475569"/>
+    <text x="158" y="308" text-anchor="middle" fill="#f8fafc" font-size="19" font-weight="600">WPF GUI</text><text x="158" y="335" text-anchor="middle" fill="#94a3b8" font-size="14">Interactive analysis</text>
+    <rect x="365" y="145" width="300" height="217" rx="18" fill="#172033" stroke="#3b82f6" stroke-width="2"/>
+    <text x="515" y="182" text-anchor="middle" fill="#dbeafe" font-size="21" font-weight="700">Detector.Core</text>
+    <text x="400" y="222" fill="#cbd5e1" font-size="15">• File and directory scanner</text><text x="400" y="252" fill="#cbd5e1" font-size="15">• AMSI and PowerShell analysis</text><text x="400" y="282" fill="#cbd5e1" font-size="15">• Read-only process inspection</text><text x="400" y="312" fill="#cbd5e1" font-size="15">• Trust, watch, and reporting</text>
+    <rect x="770" y="145" width="294" height="92" rx="14" fill="#152e2a" stroke="#34d399"/>
+    <text x="917" y="183" text-anchor="middle" fill="#d1fae5" font-size="19" font-weight="600">Findings</text><text x="917" y="210" text-anchor="middle" fill="#a7f3d0" font-size="14">Evidence, not enforcement</text>
+    <rect x="770" y="270" width="294" height="92" rx="14" fill="#29233d" stroke="#a78bfa"/>
+    <text x="917" y="308" text-anchor="middle" fill="#ede9fe" font-size="19" font-weight="600">Reports</text><text x="917" y="335" text-anchor="middle" fill="#c4b5fd" font-size="14">Console + JSONL export</text>
+  </g>
+  <path d="M261 191 H350" stroke="#60a5fa" stroke-width="3" marker-end="url(#arrow)"/><path d="M261 316 H350" stroke="#60a5fa" stroke-width="3" marker-end="url(#arrow)"/><path d="M665 191 H755" stroke="#60a5fa" stroke-width="3" marker-end="url(#arrow)"/><path d="M665 316 H755" stroke="#60a5fa" stroke-width="3" marker-end="url(#arrow)"/>
+</svg>

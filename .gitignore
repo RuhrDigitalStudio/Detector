@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Build output
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# Native binaries are never part of this read-only public source release.
+native/out/
+*.pdb
+*.obj
+*.lib
+*.exp
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Logs / local scan output
+*.log
+detections.jsonl
+
+# OS
+Thumbs.db
+Desktop.ini
