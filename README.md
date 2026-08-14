@@ -6,6 +6,13 @@ defensive analysis: it reads and classifies evidence without executing samples,
 changing other processes, creating persistence, quarantining files, or deleting
 anything.
 
+## Project status
+
+The repository contains the .NET 8 core, CLI, Windows WPF interface, safe
+synthetic tests, and release-readiness checks. Detector remains an initial
+source release rather than a production-proven endpoint-security product. Build
+and verify the exact revision locally before relying on its output.
+
 ![Detector architecture](docs/images/architecture.svg)
 
 ## Safety scope
@@ -99,6 +106,7 @@ Read [SECURITY.md](SECURITY.md) for responsible vulnerability reporting and
 
 Detector is available under the [MIT License](LICENSE). This license covers the
 original repository source and documentation, not Windows, AMSI providers,
-third-party security products, or files inspected with Detector. Complete the
-final provenance checklist in [release readiness](docs/release-readiness.md)
-before making the repository public.
+third-party security products, or files inspected with Detector. Release and
+provenance gates are recorded in
+[release readiness](docs/release-readiness.md); they do not turn findings into
+malware verdicts or guarantee complete host coverage.
