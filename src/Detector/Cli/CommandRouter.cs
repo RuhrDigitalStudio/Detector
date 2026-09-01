@@ -26,6 +26,10 @@ public static class CommandRouter
             PrintUsage();
             return 0;
         }
+        // Runtime evidence import is offline and does not submit the trace to
+        // AMSI. Route it before provider initialization to keep that boundary explicit.
+        if (opts.Command == "import-trace")
+            return CaseCommandRunner.ImportTrace(opts, Console.Out, Console.Error);
 
         var reporter = new Reporter(opts.JsonPath, opts.Verbosity);
         // The false-positive filter wraps the reporter unless disabled. Findings
@@ -48,6 +52,7 @@ public static class CommandRouter
         {
             switch (opts.Command)
             {
+                case "analyze": return CaseCommandRunner.Analyze(opts, amsi, Console.Out, Console.Error);
                 case "scan-file": return ScanFile(sink, reporter, amsi, opts.Positional);
                 case "scan-dir": return ScanDir(sink, reporter, amsi, opts.Positional);
                 case "scan-ps": return ScanPs(sink, reporter, amsi, opts.Positional);
@@ -215,6 +220,8 @@ Usage:
   detector <command> [args] [options]
 
 Commands:
+  analyze <path>       Build a correlated case for a file or source directory.
+  import-trace <path>  Import JSONL runtime evidence from a VM or sandbox.
   scan-file <path>     Scan a file with AMSI + heuristics (EICAR, entropy).
   scan-dir  <path>     Recursively scan a directory.
   scan-ps   <path|->   Scan a PowerShell script/command (deobfuscate + AMSI).
@@ -225,6 +232,8 @@ Commands:
   selftest             Prove the AMSI + heuristic pipeline works (safe samples).
 
 Options:
+  --report-json <path> Write the complete case as deterministic JSON.
+  --report-html <path> Write a self-contained, encoded HTML case report.
   --json <path>        Append findings as JSON lines to <path>.
   --verbose, -v        Show clean results + the filtered/telemetry trace stream.
   -vv, --debug         Even more: every raw event (process/DLL/dedup) is traced.

@@ -42,4 +42,14 @@ public sealed class IndicatorExtractorTests
 
         Assert.DoesNotContain(indicators, item => item.Kind == IndicatorKind.Domain);
     }
+
+    [Fact]
+    public void Extract_DoesNotTreatDotNetIdentifiersAsDomains()
+    {
+        const string source = "System.Reflection.Assembly.Load(value); StringComparison.OrdinalIgnoreCase";
+
+        var indicators = IndicatorExtractor.Extract(source, "Synthetic.cs");
+
+        Assert.DoesNotContain(indicators, item => item.Kind == IndicatorKind.Domain);
+    }
 }

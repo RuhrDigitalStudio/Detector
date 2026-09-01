@@ -16,13 +16,15 @@ public sealed record AnalysisLimits
 
     public int MaximumTimelineProperties { get; init; } = 64;
 
-    public int MaximumCoverageRecords { get; init; } = 4_096;
+    public int MaximumCoverageRecords { get; init; } = 20_000;
 
     public int MaximumTextLength { get; init; } = 16_384;
 
     public long MaximumDeepArtifactBytes { get; init; } = 64L * 1024 * 1024;
 
     public int MaximumSourceBytes { get; init; } = 4 * 1024 * 1024;
+
+    public int MaximumAmsiBytes { get; init; } = 16 * 1024 * 1024;
 
     public int MaximumPeSections { get; init; } = 96;
 

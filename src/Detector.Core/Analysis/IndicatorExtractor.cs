@@ -18,6 +18,12 @@ public static class IndicatorExtractor
     [
         "powershell", "pwsh", "cmd.exe", "rundll32", "regsvr32", "mshta", "wscript", "cscript"
     ];
+    private static readonly HashSet<string> DomainSuffixes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "at", "ai", "app", "biz", "ch", "cloud", "cn", "co", "com", "de", "dev", "edu", "eu",
+        "example", "fr", "gov", "info", "invalid", "io", "me", "mil", "net", "nl", "online", "org",
+        "pl", "ru", "site", "tech", "test", "top", "ua", "uk", "xyz"
+    };
 
     public static IReadOnlyList<IndicatorCandidate> Extract(
         string text,
@@ -105,10 +111,10 @@ public static class IndicatorExtractor
     {
         var normalized = value.ToLowerInvariant();
         var extension = Path.GetExtension(normalized);
-        return extension is ".exe" or ".dll" or ".sys" or ".ps1" or ".psm1" or ".cmd" or ".bat" or
-            ".scr" or ".cpl" or ".ocx"
-            ? null
-            : normalized;
+        if (extension is ".exe" or ".dll" or ".sys" or ".ps1" or ".psm1" or ".cmd" or ".bat" or
+            ".scr" or ".cpl" or ".ocx") return null;
+        var separator = normalized.LastIndexOf('.');
+        return separator >= 0 && DomainSuffixes.Contains(normalized[(separator + 1)..]) ? normalized : null;
     }
 
     private static string TrimPunctuation(string value) =>

@@ -38,4 +38,28 @@ public class CliOptionsTests
         Assert.True(o.NoAmsi);
         Assert.True(o.Verbose);
     }
+
+    [Fact]
+    public void CaseReportPaths_ParseWithoutChangingLegacyJsonlOption()
+    {
+        var options = CliOptions.Parse(
+            ["analyze", "sample.dll", "--report-json", "case.json", "--report-html", "case.html", "--json", "findings.jsonl"]);
+
+        Assert.Equal("analyze", options.Command);
+        Assert.Equal("sample.dll", Assert.Single(options.Positional));
+        Assert.Equal("case.json", options.ReportJsonPath);
+        Assert.Equal("case.html", options.ReportHtmlPath);
+        Assert.Equal("findings.jsonl", options.JsonPath);
+        Assert.Null(options.Error);
+    }
+
+    [Theory]
+    [InlineData("--report-json")]
+    [InlineData("--report-html")]
+    public void CaseReportOptionWithoutPath_IsAnError(string option)
+    {
+        var options = CliOptions.Parse(["analyze", "sample.dll", option]);
+
+        Assert.NotNull(options.Error);
+    }
 }
