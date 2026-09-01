@@ -214,7 +214,7 @@ public static class CommandRouter
     {
         Console.WriteLine(
 """
-Detector — a small defensive antivirus (AMSI + RunPE + PowerShell).
+Detector — a defensive Windows analysis workbench.
 
 Usage:
   detector <command> [args] [options]
@@ -243,6 +243,7 @@ Options:
                        (noisy — legitimate JIT/thunks will match).
 
 Notes:
+  * analyze and import-trace inspect data; they do not launch selected samples.
   * scan-proc / watch may require running elevated (Administrator) to read
     other processes' memory.
   * This tool is read-only and defensive: it never injects, modifies, quarantines

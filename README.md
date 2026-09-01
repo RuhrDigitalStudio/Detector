@@ -1,112 +1,151 @@
 # Detector
 
-Detector is a small Windows tool for investigating suspicious files,
-PowerShell content, process metadata, and process memory. It is designed for
-defensive analysis: it reads and classifies evidence without executing samples,
-changing other processes, creating persistence, quarantining files, or deleting
-anything.
+Detector turns suspicious Windows files, source code, scripts, and exported
+runtime events into a reviewable analysis case. It connects low-level findings
+to likely capabilities, keeps track of what could not be inspected, and exports
+the result as deterministic JSON or a self-contained HTML report.
 
-## Project status
+It is built for first-pass Blue Team triage. Detector does not execute a sample,
+make a verdict on behalf of an analyst, or pretend that a clean scan proves a
+host is clean.
 
-The repository contains the .NET 8 core, CLI, Windows WPF interface, safe
-synthetic tests, and release-readiness checks. Detector remains an initial
-source release rather than a production-proven endpoint-security product. Build
-and verify the exact revision locally before relying on its output.
+![Detector workbench showing a synthetic case](docs/images/detector-workbench.png)
 
-![Detector architecture](docs/images/architecture.svg)
+## What it does
 
-## Safety scope
+- Profiles PE and managed .NET artifacts without loading their assemblies.
+- Extracts assembly identity, target framework, sections, imports, P/Invoke and
+  API families useful during triage.
+- Reviews C# and PowerShell for process access, memory manipulation, remote
+  threads, dynamic loading, persistence, credential access, download-and-run
+  chains, and defense-evasion signals.
+- Peels bounded PowerShell encoding layers and extracts URLs, domains, IPs,
+  commands, registry paths, and file paths.
+- Imports normalized JSONL or common Sysmon-shaped events from an isolated VM,
+  then builds a process timeline without running the sample on the analyst host.
+- Correlates related rules into plain-language capabilities with explicit
+  confidence and supporting evidence.
+- Records incomplete, unavailable, and failed modules beside the findings.
+- Offers optional AMSI, read-only process-memory inspection, and ETW/polling
+  sensors for activity already occurring on the current Windows host.
 
-- Use harmless synthetic inputs and official EICAR or AMSI test artifacts when
-  verifying a deployment.
-- A finding is evidence to investigate, not proof of compromise.
-- Use the least privilege that provides the visibility you need. Protected or
-  inaccessible processes can reduce coverage, so read informational messages
-  before treating a clean summary as comprehensive.
-- Detector is analysis software, not endpoint protection. It does not block
-  attacks or replace an incident-response process.
+## A practical workflow
 
-## Architecture
+1. Put the unknown artifact and its runtime logs in an isolated analysis folder.
+2. Open the folder in the workbench or run `detector analyze`.
+3. Review high-severity findings, then the capability and indicator tabs.
+4. Read Coverage before drawing conclusions; unavailable AMSI or inaccessible
+   processes matter.
+5. Export JSON for tooling or HTML for a hand-off. Preserve the original sample
+   and its hash separately according to your incident-response process.
 
-| Component | Responsibility |
-| --- | --- |
-| `Detector.Core` | Read-only scanners, AMSI integration, PowerShell analysis, trust checks, reporting, and monitoring. |
-| `Detector` | Command-line interface and optional JSONL output. |
-| `Detector.Gui` | WPF interface over the same core scanning APIs. |
-| `Detector.Tests` | xUnit tests using safe synthetic fixtures. |
-
-AMSI verdicts come from the antimalware provider installed on the local
-machine. If the Windows AMSI API cannot initialize, Detector reports the
-failure and continues with its built-in heuristics. Initialization alone does
-not prove that a provider will detect a particular sample; use `selftest` as a
-safe pipeline check. Process-memory scans use read-only Windows APIs and may
-not be able to inspect protected processes.
+Detector never launches the selected artifact. Runtime behavior must come from
+events captured elsewhere or from the optional live sensors observing the local
+host.
 
 ## Requirements
 
 - Windows x64
-- .NET 8 SDK to build and test
-- An active AMSI provider for AMSI-backed verdicts
-- Administrator privileges for fuller process-memory and ETW coverage
+- .NET 8 Desktop Runtime for framework-dependent builds
+- .NET 8 SDK when building from source
+- Optional: an active AMSI provider
+- Optional: Administrator rights for broader ETW and process-memory visibility
 
-## Build and test
+## Build and run
 
 ```powershell
+dotnet restore Detector.slnx
 dotnet build Detector.slnx -c Release
-dotnet test tests/Detector.Tests/Detector.Tests.csproj
-dotnet format Detector.slnx --verify-no-changes
+dotnet test Detector.slnx -c Release --no-build
+dotnet run --project src/Detector.Gui -c Release
 ```
 
-## CLI
+The GUI is the quickest route for interactive triage. Files and folders can be
+dropped onto the window; `.jsonl` and `.ndjson` files are treated as runtime
+evidence. The workbench keeps static evidence, imported events, and live sensor
+results in separate views.
+
+## Command line
+
+Build a complete case for one file or a directory:
+
+```powershell
+dotnet run --project src/Detector -- analyze .\triage --report-json .\reports\case.json --report-html .\reports\case.html
+```
+
+Import events exported by a sandbox or Sysmon collection:
+
+```powershell
+dotnet run --project src/Detector -- import-trace .\events.jsonl --report-json .\reports\runtime-case.json
+```
+
+Focused scanners and sensors remain available:
 
 ```text
 detector scan-file <path>
 detector scan-dir <path>
 detector scan-ps <path|->
-detector scan-proc <pid|all>
+detector scan-proc <pid|all> [--aggressive]
 detector watch
 detector monitor
 detector selftest
 ```
 
-Use `selftest` only with its built-in harmless verification strings. The
-`--aggressive` process-memory option is intentionally noisy: JIT runtimes,
-security products, and accessibility tools can legitimately use executable or
-RWX memory. Do not turn a heuristic finding into an automated enforcement
-decision.
+Exit codes are `0` clean, `1` suspicious, `2` malicious, and `3` error. Report
+files are created rather than silently overwritten. See
+[the case schema](docs/case-schema.md) and
+[runtime trace guide](docs/runtime-traces.md) before integrating the output.
 
-## GUI
+## How to read a case
 
-The WPF GUI offers the same file, folder, PowerShell, process, and monitoring
-workflows with clear loading and error status, keyboard-accessible controls, and
-JSONL export. Public screenshots are intentionally withheld until they can use
-only synthetic paths and harmless results.
+| Section | Meaning |
+| --- | --- |
+| Assessment | The strongest reported verdict plus a short coverage-aware summary. |
+| Findings | Individual rules with severity, target, source, and concrete evidence. |
+| Capabilities | Correlated behavior such as process injection or download-and-execute. |
+| Indicators | Deduplicated values and the sources and contexts that produced them. |
+| Artifacts | Hashes, type, trust, PE/.NET metadata, imports, and entropy. |
+| Timeline | Normalized runtime events ordered in UTC when timestamps are present. |
+| Coverage | What completed, what was partial, and what was unavailable or failed. |
 
-Launch it from the repository root:
+A capability is a lead, not attribution. For example, a full process-access,
+memory-write, and remote-thread chain is stronger than one isolated API name.
+Detector preserves that distinction in the confidence and supporting-rule fields.
 
-```powershell
-dotnet run --project src/Detector.Gui
-```
+## Architecture
 
-## Limitations
+| Project | Responsibility |
+| --- | --- |
+| `Detector.Core` | Bounded artifact analysis, script rules, correlation, case model, exporters, AMSI and read-only sensors. |
+| `Detector` | CLI commands, focused scanner output, and report creation. |
+| `Detector.Gui` | Windows case workbench over the same analysis service. |
+| `Detector.Tests` | Safe synthetic tests for parsing, limits, correlation, reports, CLI behavior, and the view model. |
 
-- AMSI results depend on the provider and policy installed on the device.
-- Process enumeration, ETW, WMI, and memory reads can fail because of
-  privileges, protection level, Windows configuration, or a process exiting.
-- Heuristics can miss threats and can flag legitimate software.
-- Monitoring can miss short-lived events. Corroborate findings with trusted
-  tools and established incident-response procedures.
+![Detector component architecture](docs/images/architecture.svg)
 
-## Security and contributions
+## Deliberate limits
 
-Read [SECURITY.md](SECURITY.md) for responsible vulnerability reporting and
-[CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
+- Detector is not an EDR, antivirus replacement, sandbox, disassembler, or
+  decompiler.
+- It does not instrument or execute an unknown program. Imported events are only
+  as complete and trustworthy as the system that captured them.
+- AMSI results vary with the installed provider and policy.
+- Signatures and heuristics can miss threats and can flag legitimate admin,
+  accessibility, security, or JIT tooling.
+- Protected processes, short-lived activity, event loss, permissions, and log
+  shape differences can reduce visibility.
+- Source analysis is lexical; it reports matched constructs and does not claim
+  to prove the program's reachable runtime behavior.
 
-## License
+These are operational facts, so Detector exposes them as Coverage instead of
+hiding them in a debug log.
 
-Detector is available under the [MIT License](LICENSE). This license covers the
-original repository source and documentation, not Windows, AMSI providers,
-third-party security products, or files inspected with Detector. Release and
-provenance gates are recorded in
-[release readiness](docs/release-readiness.md); they do not turn findings into
-malware verdicts or guarantee complete host coverage.
+## Safety and contributing
+
+Use harmless synthetic fixtures or official EICAR/AMSI test artifacts in public
+issues and tests. Do not upload malware, credentials, dumps, or customer data.
+Read [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md) before
+reporting a vulnerability or proposing a detector.
+
+Detector is licensed under the [MIT License](LICENSE). See
+[CHANGELOG.md](CHANGELOG.md) for release-candidate changes.

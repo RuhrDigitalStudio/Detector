@@ -90,14 +90,11 @@
               <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter rule, target, source, or details"/>
               <ComboBox Grid.Column="1" Margin="8,0,0,0" SelectedValuePath="Tag"
                         SelectedValue="{Binding MinimumSeverity}" ToolTip="Minimum severity">
-                <ComboBox.Resources>
-                  <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#121820"/></Style>
-                </ComboBox.Resources>
-                <ComboBoxItem Content="Info and above" Tag="{x:Static model:Severity.Info}"/>
-                <ComboBoxItem Content="Low and above" Tag="{x:Static model:Severity.Low}"/>
-                <ComboBoxItem Content="Medium and above" Tag="{x:Static model:Severity.Medium}"/>
-                <ComboBoxItem Content="High and above" Tag="{x:Static model:Severity.High}"/>
-                <ComboBoxItem Content="Critical only" Tag="{x:Static model:Severity.Critical}"/>
+                <ComboBoxItem Tag="{x:Static model:Severity.Info}"><TextBlock Text="Info and above" Foreground="#121820"/></ComboBoxItem>
+                <ComboBoxItem Tag="{x:Static model:Severity.Low}"><TextBlock Text="Low and above" Foreground="#121820"/></ComboBoxItem>
+                <ComboBoxItem Tag="{x:Static model:Severity.Medium}"><TextBlock Text="Medium and above" Foreground="#121820"/></ComboBoxItem>
+                <ComboBoxItem Tag="{x:Static model:Severity.High}"><TextBlock Text="High and above" Foreground="#121820"/></ComboBoxItem>
+                <ComboBoxItem Tag="{x:Static model:Severity.Critical}"><TextBlock Text="Critical only" Foreground="#121820"/></ComboBoxItem>
               </ComboBox>
             </Grid>
             <DataGrid Grid.Row="1" ItemsSource="{Binding Findings}" SelectedItem="{Binding SelectedFinding}">

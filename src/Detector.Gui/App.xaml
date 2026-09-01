@@ -63,8 +63,9 @@
       <Setter Property="Padding" Value="8,6"/>
     </Style>
     <Style TargetType="ComboBox">
-      <Setter Property="Foreground" Value="#121820"/>
-      <Setter Property="Background" Value="#DCE5EF"/>
+      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
+      <Setter Property="Background" Value="{StaticResource PanelRaised}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
       <Setter Property="Padding" Value="6,4"/>
     </Style>
     <Style TargetType="TabControl">
