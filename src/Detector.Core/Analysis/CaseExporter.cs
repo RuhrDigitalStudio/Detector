@@ -51,14 +51,26 @@ public static class CaseExporter
             .Append(H(report.CaseId)).Append(" · ").Append(H(report.CreatedAt.ToString("O"))).Append("</p>")
             .Append("<p>").Append(report.Artifacts.Count).Append(" artifact(s), ")
             .Append(report.Findings.Count).Append(" finding(s), ")
-            .Append(report.Indicators.Count).Append(" indicator(s).</p>");
+            .Append(report.Indicators.Count).Append(" indicator(s).</p><p><strong>Assessment:</strong> ")
+            .Append(H(report.Assessment.Summary)).Append("</p>");
 
+        AppendCapabilities(html, report, H);
         AppendArtifacts(html, report, H);
         AppendFindings(html, report, H);
         AppendIndicators(html, report, H);
         AppendCoverage(html, report, H);
         html.Append("</body></html>");
         return html.ToString();
+    }
+
+    private static void AppendCapabilities(StringBuilder html, AnalysisCase report, Func<string?, string> h)
+    {
+        html.Append("<h2>Capabilities</h2><table><thead><tr><th>Capability</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody>");
+        foreach (var item in report.Capabilities)
+            html.Append("<tr><td>").Append(h(item.Title)).Append("</td><td>").Append(h(item.Confidence.ToString()))
+                .Append("</td><td>").Append(h(item.Explanation)).Append(" Supporting rules: ")
+                .Append(h(string.Join(", ", item.SupportingRules))).Append("</td></tr>");
+        html.Append("</tbody></table>");
     }
 
     private static void AppendArtifacts(StringBuilder html, AnalysisCase report, Func<string?, string> h)
@@ -103,7 +115,7 @@ public static class CaseExporter
         if (report.SchemaVersion != AnalysisCase.CurrentSchemaVersion)
             throw new InvalidDataException("The analysis case schema version is not supported.");
         if (report.Artifacts is null || report.Findings is null || report.Indicators is null ||
-            report.Capabilities is null || report.Timeline is null || report.Coverage is null)
+            report.Capabilities is null || report.Timeline is null || report.Coverage is null || report.Assessment is null)
             throw new InvalidDataException("The analysis case contains a null collection.");
         if (report.Artifacts.Count > limits.MaximumArtifacts || report.Findings.Count > limits.MaximumFindings ||
             report.Indicators.Count > limits.MaximumIndicators || report.Capabilities.Count > limits.MaximumCapabilities ||
@@ -152,6 +164,11 @@ public static class CaseExporter
             CheckText(capability.Explanation, limits, "capability explanation");
             foreach (var rule in capability.SupportingRules) CheckText(rule, limits, "supporting rule");
         }
+        if (report.Assessment.CoverageWarnings is null)
+            throw new InvalidDataException("The case assessment is incomplete.");
+        CheckText(report.Assessment.Summary, limits, "assessment summary");
+        foreach (var warning in report.Assessment.CoverageWarnings)
+            CheckText(warning, limits, "coverage warning");
         foreach (var item in report.Timeline)
         {
             if (item is null || item.Properties is null)

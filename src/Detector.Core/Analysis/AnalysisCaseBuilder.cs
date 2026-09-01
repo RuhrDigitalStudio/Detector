@@ -109,6 +109,14 @@ public sealed class AnalysisCaseBuilder
             .OrderBy(item => item.Kind)
             .ThenBy(item => item.Value, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+        var findings = _findings.OrderByDescending(item => item.Severity)
+            .ThenBy(item => item.Source, StringComparer.Ordinal)
+            .ThenBy(item => item.Rule, StringComparer.Ordinal)
+            .ThenBy(item => item.Target, StringComparer.Ordinal).ToArray();
+        var capabilities = MergeCapabilities(_capabilities.Concat(CorrelationEngine.Correlate(findings)));
+        var coverage = _coverage.OrderBy(item => item.Module, StringComparer.Ordinal)
+            .ThenBy(item => item.State).ToArray();
+        var assessment = CaseAssessment.Create(findings, coverage, capabilities);
         return new AnalysisCase(
             AnalysisCase.CurrentSchemaVersion,
             CaseId,
@@ -116,19 +124,29 @@ public sealed class AnalysisCaseBuilder
             CreatedAt,
             _artifacts.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(item => item.Id, StringComparer.Ordinal).ToArray(),
-            _findings.OrderByDescending(item => item.Severity)
-                .ThenBy(item => item.Source, StringComparer.Ordinal)
-                .ThenBy(item => item.Rule, StringComparer.Ordinal)
-                .ThenBy(item => item.Target, StringComparer.Ordinal).ToArray(),
+            findings,
             indicators,
-            _capabilities.OrderByDescending(item => item.Confidence)
-                .ThenBy(item => item.Id, StringComparer.Ordinal).ToArray(),
+            capabilities,
             _timeline.OrderBy(item => item.Timestamp)
                 .ThenBy(item => item.Provider, StringComparer.Ordinal)
                 .ThenBy(item => item.Event, StringComparer.Ordinal).ToArray(),
-            _coverage.OrderBy(item => item.Module, StringComparer.Ordinal)
-                .ThenBy(item => item.State).ToArray());
+            coverage,
+            assessment);
     }
+
+    private static Capability[] MergeCapabilities(IEnumerable<Capability> capabilities) =>
+        capabilities.GroupBy(item => item.Id, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var strongest = group.OrderByDescending(item => item.Confidence).First();
+                return strongest with
+                {
+                    SupportingRules = group.SelectMany(item => item.SupportingRules)
+                        .Distinct(StringComparer.Ordinal).Order().ToArray()
+                };
+            })
+            .OrderByDescending(item => item.Confidence)
+            .ThenBy(item => item.Id, StringComparer.Ordinal).ToArray();
 
     private string RequiredText(string value, string name)
     {

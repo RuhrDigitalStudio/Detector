@@ -160,7 +160,8 @@ public sealed record AnalysisCase(
     IReadOnlyList<Indicator> Indicators,
     IReadOnlyList<Capability> Capabilities,
     IReadOnlyList<TimelineEvent> Timeline,
-    IReadOnlyList<CoverageRecord> Coverage)
+    IReadOnlyList<CoverageRecord> Coverage,
+    CaseAssessment Assessment)
 {
     public const int CurrentSchemaVersion = 1;
 
