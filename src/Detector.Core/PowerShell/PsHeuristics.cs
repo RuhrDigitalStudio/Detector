@@ -22,6 +22,13 @@ public static class PsHeuristics
         (new(@"VirtualAlloc|WriteProcessMemory|CreateRemoteThread|memset|OpenProcess", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.injection-api", Severity.Critical),
         (new(@"FromBase64String", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.base64-decode", Severity.Medium),
         (new(@"System\.Net\.Sockets|TcpClient|-nonInteractive", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.network-shell", Severity.Medium),
+        (new(@"\bStart-Process\b|\bInvoke-Item\b|\b&\s*['""]?[^\s]+", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.process-start", Severity.Medium),
+        (new(@"Register-ScheduledTask|New-ScheduledTask|\bschtasks(?:\.exe)?\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.persistence-task", Severity.High),
+        (new(@"\bNew-Service\b|\bSet-Service\b|\bsc(?:\.exe)?\s+create\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.persistence-service", Severity.High),
+        (new(@"CurrentVersion\\(?:Run|RunOnce)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.persistence-autorun", Severity.High),
+        (new(@"(?:Add|Set)-MpPreference[^\r\n]*(?:Exclusion|Disable)|DisableAntiSpyware", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.security-exclusion", Severity.High),
+        (new(@"AmsiUtils|amsiInitFailed|amsiContext|ScriptBlockLogging", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.security-bypass", Severity.High),
+        (new(@"\blsass\b|sekurlsa|vaultcmd|cmdkey\s+/list|LsaRetrievePrivateData|CredRead", RegexOptions.IgnoreCase | RegexOptions.Compiled), "ps.credential-access", Severity.High),
     };
 
     public static IReadOnlyList<Hit> Evaluate(string script)
@@ -32,6 +39,10 @@ public static class PsHeuristics
             var m = rx.Match(script);
             if (m.Success) hits.Add(new Hit(rule, sev, m.Value.Trim()));
         }
+        var retrievesContent = hits.Any(hit => hit.Rule is "ps.webclient-download" or "ps.remote-fetch");
+        var executesContent = hits.Any(hit => hit.Rule is "ps.iex" or "ps.process-start" or "ps.reflection-load");
+        if (retrievesContent && executesContent)
+            hits.Add(new Hit("ps.download-execute", Severity.High, "network retrieval combined with execution"));
         return hits;
     }
 }

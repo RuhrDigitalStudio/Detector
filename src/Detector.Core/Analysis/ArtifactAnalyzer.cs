@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Detector.Model;
+using Detector.PowerShell;
 using Detector.Trust;
 
 namespace Detector.Analysis;
@@ -34,6 +35,7 @@ public sealed class ArtifactAnalyzer
             Entropy = fingerprint.Entropy
         };
         var findings = new List<Detection>();
+        var indicators = new List<IndicatorCandidate>();
         var coverage = new List<CoverageRecord>
         {
             new("Fingerprint", CoverageState.Completed, "Size, SHA-256 and byte entropy calculated by streaming the file.")
@@ -106,6 +108,7 @@ public sealed class ArtifactAnalyzer
                 {
                     var source = ReadSource(fullPath);
                     findings.AddRange(SourceAnalyzer.AnalyzeCSharp(source, fullPath));
+                    indicators.AddRange(IndicatorExtractor.Extract(source, fullPath));
                     coverage.Add(new CoverageRecord(
                         "C# source",
                         CoverageState.Completed,
@@ -121,8 +124,35 @@ public sealed class ArtifactAnalyzer
                 }
             }
         }
+        else if (kind == ArtifactKind.PowerShell)
+        {
+            if (info.Length > _limits.MaximumSourceBytes)
+            {
+                coverage.Add(new CoverageRecord(
+                    "PowerShell",
+                    CoverageState.Partial,
+                    $"Script analysis skipped above {_limits.MaximumSourceBytes:N0} bytes."));
+            }
+            else
+            {
+                try
+                {
+                    var analysis = new PowerShellScanner(null).Analyze(ReadSource(fullPath), fullPath);
+                    findings.AddRange(analysis.Findings);
+                    indicators.AddRange(analysis.Indicators);
+                    coverage.Add(new CoverageRecord(
+                        "PowerShell",
+                        CoverageState.Completed,
+                        $"Inspected {analysis.Layers.Count} text layer(s) without running the script."));
+                }
+                catch (Exception ex) when (ex is DecoderFallbackException or AnalysisLimitException)
+                {
+                    coverage.Add(new CoverageRecord("PowerShell", CoverageState.Partial, ex.Message));
+                }
+            }
+        }
 
-        return new ArtifactAnalysis(artifact, findings, coverage);
+        return new ArtifactAnalysis(artifact, findings, indicators, coverage);
     }
 
     private static FingerprintResult Fingerprint(string path, CancellationToken cancellationToken)
@@ -201,4 +231,5 @@ public sealed class ArtifactAnalyzer
 public sealed record ArtifactAnalysis(
     ArtifactProfile Artifact,
     IReadOnlyList<Detection> Findings,
+    IReadOnlyList<IndicatorCandidate> Indicators,
     IReadOnlyList<CoverageRecord> Coverage);

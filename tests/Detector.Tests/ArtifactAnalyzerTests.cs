@@ -73,13 +73,15 @@ public sealed class ArtifactAnalyzerTests
         {
             var powerShell = Path.Combine(root, "collect.ps1");
             var csharp = Path.Combine(root, "Program.cs");
-            File.WriteAllText(powerShell, "Write-Output 'synthetic'");
+            File.WriteAllText(powerShell, "Invoke-WebRequest https://example.invalid/stage");
             File.WriteAllText(csharp, "internal static class Program { public static void Main() { } }");
 
             var psResult = new ArtifactAnalyzer().Analyze(powerShell);
             var csResult = new ArtifactAnalyzer().Analyze(csharp);
 
             Assert.Equal(ArtifactKind.PowerShell, psResult.Artifact.Kind);
+            Assert.Contains(psResult.Indicators, item => item.Kind == IndicatorKind.Url);
+            Assert.Contains(psResult.Coverage, item => item.Module == "PowerShell" && item.State == CoverageState.Completed);
             Assert.Equal(ArtifactKind.CSharpSource, csResult.Artifact.Kind);
             Assert.Contains(csResult.Coverage, item => item.Module == "C# source" && item.State == CoverageState.Completed);
         }
