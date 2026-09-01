@@ -1,4 +1,5 @@
 using Detector.Amsi;
+using Detector.Analysis;
 using Detector.Model;
 
 namespace Detector.PowerShell;
@@ -11,10 +12,15 @@ public sealed class PowerShellScanner
 
     public PowerShellScanner(AmsiScanner? amsi) => _amsi = amsi;
 
-    public IEnumerable<Detection> Scan(string script, string target)
+    public IEnumerable<Detection> Scan(string script, string target) =>
+        Analyze(script, target).Findings;
+
+    public PowerShellAnalysis Analyze(string script, string target)
     {
         var findings = new List<Detection>();
         var layers = Deobfuscator.Expand(script);
+        var indicators = new List<IndicatorCandidate>();
+        var indicatorKeys = new HashSet<(IndicatorKind Kind, string Value)>();
 
         for (int i = 0; i < layers.Count; i++)
         {
@@ -26,6 +32,15 @@ public sealed class PowerShellScanner
                     hit.Severity == Severity.Critical ? Verdict.Malicious : Verdict.Suspicious,
                     hit.Rule, $"matched: {hit.Match}"));
 
+            var remainingIndicators = AnalysisLimits.Default.MaximumIndicators - indicators.Count;
+            foreach (var indicator in remainingIndicators > 0
+                         ? IndicatorExtractor.Extract(layer, label, remainingIndicators)
+                         : [])
+            {
+                if (indicatorKeys.Add((indicator.Kind, indicator.Value.ToUpperInvariant())))
+                    indicators.Add(indicator);
+            }
+
             if (_amsi is not null)
             {
                 var d = _amsi.ScanString(layer, label, "script.ps1");
@@ -34,6 +49,11 @@ public sealed class PowerShellScanner
             }
         }
 
-        return findings;
+        return new PowerShellAnalysis(layers, findings, indicators);
     }
 }
+
+public sealed record PowerShellAnalysis(
+    IReadOnlyList<string> Layers,
+    IReadOnlyList<Detection> Findings,
+    IReadOnlyList<IndicatorCandidate> Indicators);

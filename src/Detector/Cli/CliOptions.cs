@@ -8,6 +8,8 @@ public sealed class CliOptions
     public string? Command { get; private set; }
     public List<string> Positional { get; } = new();
     public string? JsonPath { get; private set; }
+    public string? ReportJsonPath { get; private set; }
+    public string? ReportHtmlPath { get; private set; }
     public TraceLevel Verbosity { get; private set; } = TraceLevel.Normal;
     public bool NoAmsi { get; private set; }
     public bool Aggressive { get; private set; }
@@ -34,6 +36,18 @@ public sealed class CliOptions
                         o.JsonPath = args[++i];
                     else
                         o.Error = "--json requires a <path> argument";
+                    break;
+                case "--report-json":
+                    if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
+                        o.ReportJsonPath = args[++i];
+                    else
+                        o.Error = "--report-json requires a <path> argument";
+                    break;
+                case "--report-html":
+                    if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
+                        o.ReportHtmlPath = args[++i];
+                    else
+                        o.Error = "--report-html requires a <path> argument";
                     break;
                 case "--verbose":
                 case "-v":

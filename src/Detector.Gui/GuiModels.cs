@@ -1,56 +1,54 @@
 using System.Windows.Media;
+using Detector.Analysis;
 using Detector.Model;
 using Detector.Reporting;
 
 namespace Detector.Gui;
 
-/// A row in the results grid (Detection + capture time + a severity colour).
+public enum CaseExportFormat { Json, Html }
+
 public sealed class DetectionRow
 {
     public string Time { get; init; } = "";
     public string Source { get; init; } = "";
     public string Verdict { get; init; } = "";
     public string Severity { get; init; } = "";
+    public Severity SeverityValue { get; init; }
     public string Rule { get; init; } = "";
     public string Target { get; init; } = "";
     public string Details { get; init; } = "";
     public Brush RowBrush { get; init; } = Brushes.Gainsboro;
+    public string SearchText => $"{Source} {Verdict} {Severity} {Rule} {Target} {Details}";
 
-    public static DetectionRow From(Detection d, string time)
+    public static DetectionRow From(Detection detection, string time = "") => new()
     {
-        Brush brush = d.Severity switch
-        {
-            Detector.Model.Severity.Critical => Rgb(0xFF, 0x6B, 0x6B),
-            Detector.Model.Severity.High => Rgb(0xFF, 0x8A, 0x8A),
-            Detector.Model.Severity.Medium => Rgb(0xF2, 0xC9, 0x4C),
-            Detector.Model.Severity.Low => Rgb(0x6F, 0xCF, 0x97),
-            _ => Rgb(0xB8, 0xBE, 0xC4),
-        };
-        return new DetectionRow
-        {
-            Time = time,
-            Source = d.Source,
-            Verdict = d.Verdict.ToString(),
-            Severity = d.Severity.ToString(),
-            Rule = d.Rule,
-            Target = d.Target,
-            Details = d.Details,
-            RowBrush = brush,
-        };
-    }
+        Time = time,
+        Source = detection.Source,
+        Verdict = detection.Verdict.ToString(),
+        Severity = detection.Severity.ToString(),
+        SeverityValue = detection.Severity,
+        Rule = detection.Rule,
+        Target = detection.Target,
+        Details = detection.Details,
+        RowBrush = SeverityBrush(detection.Severity)
+    };
 
-    /// A dim, non-finding row for the advanced trace stream (raw events, filtered
-    /// items). Shown only when the user enables the advanced view.
     public static DetectionRow Trace(string time, string message) => new()
     {
         Time = time,
         Source = "trace",
-        Verdict = "",
         Severity = "Info",
-        Rule = "",
-        Target = "",
         Details = message,
-        RowBrush = Rgb(0x80, 0x86, 0x8C),
+        RowBrush = Rgb(0x80, 0x8A, 0x9A)
+    };
+
+    private static Brush SeverityBrush(Severity severity) => severity switch
+    {
+        Detector.Model.Severity.Critical => Rgb(0xFF, 0x6B, 0x7A),
+        Detector.Model.Severity.High => Rgb(0xFF, 0x91, 0x6C),
+        Detector.Model.Severity.Medium => Rgb(0xF2, 0xC9, 0x4C),
+        Detector.Model.Severity.Low => Rgb(0x70, 0xD6, 0xA3),
+        _ => Rgb(0xA9, 0xB4, 0xC7)
     };
 
     private static Brush Rgb(byte r, byte g, byte b)
@@ -61,26 +59,45 @@ public sealed class DetectionRow
     }
 }
 
-/// A running process shown in the Processes tab.
+public sealed record CapabilityRow(string Title, string Confidence, string Explanation, string Evidence);
+
+public sealed record ArtifactRow(string Name, string Kind, string Size, string Sha256, string Architecture,
+    string Framework, string Trust, string Entropy, string Details)
+{
+    public static ArtifactRow From(ArtifactProfile artifact) => new(
+        artifact.DisplayName, artifact.Kind.ToString(), FormatSize(artifact.Size), artifact.Sha256,
+        artifact.Architecture ?? "—", artifact.TargetFramework ?? "—", artifact.Trust ?? "Not reported",
+        artifact.Entropy.ToString("F2"),
+        $"Entry point: {artifact.EntryPoint ?? "—"}\nSubsystem: {artifact.Subsystem ?? "—"}\n" +
+        $"Sections: {artifact.Sections.Count}; imports: {artifact.NativeImports.Count}; API references: {artifact.ApiReferences.Count}");
+
+    private static string FormatSize(long size) => size switch
+    {
+        >= 1_048_576 => $"{size / 1_048_576d:F1} MiB",
+        >= 1_024 => $"{size / 1_024d:F1} KiB",
+        _ => $"{size} B"
+    };
+}
+
+public sealed record IndicatorRow(string Kind, string Value, string Sources, string Contexts);
+public sealed record TimelineRow(string Time, string Provider, string Event, string Process, string Properties);
+public sealed record CoverageRow(string Module, string State, string Details, bool IsGap);
+
 public sealed class ProcRow
 {
-    private static readonly Brush DefaultBrush = Make();
+    private static readonly Brush DefaultBrush = MakeBrush();
     public int Pid { get; init; }
     public string Name { get; init; } = "";
-    // The shared DataGrid cell style binds Foreground to RowBrush; give process
-    // rows a neutral light colour so their text is visible on the dark theme.
     public Brush RowBrush => DefaultBrush;
 
-    private static Brush Make()
+    private static Brush MakeBrush()
     {
-        var b = new SolidColorBrush(Color.FromRgb(0xE6, 0xE6, 0xE6));
-        b.Freeze();
-        return b;
+        var brush = new SolidColorBrush(Color.FromRgb(0xE6, 0xEA, 0xF0));
+        brush.Freeze();
+        return brush;
     }
 }
 
-/// Bridges Core scanners/watch to the GUI: forwards findings and status text to
-/// the caller-supplied delegates (which marshal onto the UI thread).
 public sealed class GuiDetectionSink : IDetectionSink
 {
     private readonly Action<Detection> _onDetection;

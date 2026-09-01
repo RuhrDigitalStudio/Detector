@@ -50,4 +50,16 @@ public class DeobfuscatorTests
         var layers = Deobfuscator.Expand($"powershell {flag} {b64}");
         Assert.Contains(layers, l => l.Contains("Write-Host pwned"));
     }
+
+    [Fact]
+    public void Expansion_HonorsConfiguredLayerLimit()
+    {
+        var nested = "Write-Output final";
+        for (var index = 0; index < 6; index++)
+            nested = Convert.ToBase64String(Encoding.ASCII.GetBytes(nested));
+
+        var layers = Deobfuscator.Expand(nested, maxDepth: 10, maximumLayers: 3);
+
+        Assert.Equal(3, layers.Count);
+    }
 }

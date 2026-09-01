@@ -1,36 +1,61 @@
-# Detector public-release readiness
+# Detector 2.0 release-candidate checklist
 
-**Status: gated. Do not publish, push, package, tag, or create a release yet.**
+Target tag: `v2.0.0-rc.1`
 
-## Verified public boundary
+## Public boundary
 
-This branch deliberately excludes experimental process-injection, hook,
-registry-registration, native-binary, launcher, and elevation-manifest work.
-The shipped .NET projects contain only the read-only scanner, reporting,
-watching, and GUI paths reviewed for this public boundary.
+The source tree contains only the managed read-only analyzer, case/report
+model, CLI, WPF workbench, importers, sensors, documentation, and safe synthetic
+tests. It deliberately excludes experimental injector, hook, AMSI-provider
+registration, launcher, elevation-manifest, and native-binary work from local
+development folders. Self-contained archives include Microsoft .NET runtime
+dependencies produced by `dotnet publish`; they contain no project-owned native
+component.
 
-The ignore rules cover the named local native compiler-output paths; they are
-only a guardrail and do not replace staged-file review. Native source and
-binaries are not part of this public branch.
+The public product does not execute selected samples. Its runtime view consumes
+exported evidence or observes activity already occurring on the current host.
 
-## Required release evidence
+## Required evidence
 
-Before a public release, record fresh evidence for all of the following:
+- Release build completes without warnings or errors.
+- All tests pass in Release configuration.
+- Format verification and `git diff --check` pass.
+- Framework-dependent and self-contained Windows x64 CLI/GUI publishes succeed.
+- CLI static-analysis and runtime-import smoke cases create readable JSON and
+  HTML reports.
+- The WPF window starts, exposes its controls to UI Automation, and renders the
+  reviewed synthetic screenshot in `docs/images/detector-workbench.png`.
+- Tracked-file review finds no build output, native binary, dump, credential,
+  personal path, or live sample.
+- README, security policy, contribution guide, schema, runtime trace guide,
+  changelog, CI, and tag-release workflow describe the shipped behavior.
 
-1. `dotnet build Detector.slnx -c Release` succeeds with no warnings or errors.
-2. `dotnet test tests/Detector.Tests/Detector.Tests.csproj` passes.
-3. `dotnet format Detector.slnx --verify-no-changes` passes.
-4. No tracked or staged file is a native binary, build output, memory dump,
-   credential, personal path, or unreviewed sample.
-5. Public text is English and accurately describes the shipped behavior.
-6. Ownership and third-party dependency provenance are reviewed against the
-   selected MIT License.
-7. A dedicated private vulnerability-reporting channel is published.
+Record the exact commands and results below immediately before handing the
+candidate to the maintainer. A release candidate invites validation; it is not
+a claim that heuristic or runtime coverage is complete.
 
-## Known gates
+## Verification record
 
-- The MIT License has been selected; owner confirmation and dependency
-  provenance review remain required before publication.
-- The security policy has no dedicated reporting address yet.
-- The architecture image contains no machine or sample data. A GUI screenshot
-  remains optional until a reviewed synthetic scan can be captured.
+Verified locally on 2026-09-01 against the complete candidate tree:
+
+- `dotnet build Detector.slnx -c Release --no-restore`: succeeded with zero
+  warnings and zero errors.
+- `dotnet test Detector.slnx -c Release --no-build`: 141 passed, zero failed,
+  zero skipped.
+- `dotnet format Detector.slnx --verify-no-changes --no-restore` and
+  `git diff --check`: succeeded.
+- Self-contained `win-x64` CLI and GUI publishes: succeeded.
+- Static CLI smoke: suspicious exit code, 9 findings, 4 correlated
+  capabilities, valid JSON and HTML.
+- Runtime import smoke: 2 events, 2 findings, 2 indicators, 1 correlated
+  capability, valid JSON and HTML.
+- Published GUI smoke: responsive window; Analyze, Import, and Export actions
+  present through UI Automation.
+- Synthetic 1180 × 760 WPF render inspected; no personal or live sample data.
+
+## Maintainer actions
+
+1. Enable GitHub private vulnerability reporting for the repository.
+2. Review organization ownership, MIT licensing, and dependency provenance.
+3. Push the reviewed branch, merge it to `main`, then create the target tag.
+4. Verify `SHA256SUMS.txt` from the automated release before announcing it.

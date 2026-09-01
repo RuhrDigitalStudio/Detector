@@ -3,93 +3,107 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
   <Application.Resources>
-
-    <!-- Palette -->
-    <SolidColorBrush x:Key="WindowBg"  Color="#FF1E1E1E"/>
-    <SolidColorBrush x:Key="PanelBg"   Color="#FF252526"/>
-    <SolidColorBrush x:Key="HeaderBg"  Color="#FF2D2D30"/>
-    <SolidColorBrush x:Key="BorderBg"  Color="#FF3A3A3D"/>
-    <SolidColorBrush x:Key="TextFg"    Color="#FFE6E6E6"/>
-    <SolidColorBrush x:Key="SubtleFg"  Color="#FF9AA0A6"/>
-    <SolidColorBrush x:Key="AccentBg"  Color="#FF0E7FD4"/>
+    <SolidColorBrush x:Key="WindowBg" Color="#0B111B"/>
+    <SolidColorBrush x:Key="SidebarBg" Color="#0F1724"/>
+    <SolidColorBrush x:Key="PanelBg" Color="#131E2D"/>
+    <SolidColorBrush x:Key="PanelRaised" Color="#182537"/>
+    <SolidColorBrush x:Key="BorderBg" Color="#26364A"/>
+    <SolidColorBrush x:Key="TextFg" Color="#E8EEF6"/>
+    <SolidColorBrush x:Key="SubtleFg" Color="#91A0B5"/>
+    <SolidColorBrush x:Key="AccentBg" Color="#207A72"/>
+    <SolidColorBrush x:Key="AccentHover" Color="#2A9489"/>
 
     <Style TargetType="TextBlock">
       <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
-
-    <Style TargetType="CheckBox">
+    <Style TargetType="Label">
       <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="8,0"/>
     </Style>
-
-    <!-- Flat dark button -->
     <Style TargetType="Button">
       <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
-      <Setter Property="Background" Value="{StaticResource HeaderBg}"/>
+      <Setter Property="Background" Value="{StaticResource PanelRaised}"/>
       <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
-      <Setter Property="Padding" Value="10,6"/>
-      <Setter Property="Margin" Value="3"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="HorizontalContentAlignment" Value="Left"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="b" Background="{TemplateBinding Background}"
+            <Border x:Name="Border" Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                    CornerRadius="4" Padding="{TemplateBinding Padding}"
-                    TextElement.Foreground="{StaticResource TextFg}">
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    CornerRadius="5" Padding="{TemplateBinding Padding}">
+              <ContentPresenter VerticalAlignment="Center"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="b" Property="Background" Value="{StaticResource AccentBg}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource AccentBg}"/>
               </Trigger>
-              <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="0.4"/>
-              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.42"/></Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
-
-    <!-- TabControl -->
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="{StaticResource AccentBg}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource AccentHover}"/>
+    </Style>
+    <Style TargetType="CheckBox">
+      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
+      <Setter Property="Margin" Value="0,4"/>
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
+      <Setter Property="Background" Value="{StaticResource SidebarBg}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
+      <Setter Property="CaretBrush" Value="{StaticResource TextFg}"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
+      <Setter Property="Background" Value="{StaticResource PanelRaised}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
+      <Setter Property="Padding" Value="6,4"/>
+    </Style>
     <Style TargetType="TabControl">
       <Setter Property="Background" Value="{StaticResource WindowBg}"/>
       <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
     </Style>
     <Style TargetType="TabItem">
-      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
-      <Setter Property="Background" Value="{StaticResource PanelBg}"/>
+      <Setter Property="Foreground" Value="{StaticResource SubtleFg}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="12,8"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="TabItem">
-            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                    BorderBrush="{StaticResource BorderBg}" BorderThickness="1,1,1,0"
-                    Padding="14,7" Margin="2,0,0,0" CornerRadius="4,4,0,0"
-                    TextElement.Foreground="{StaticResource TextFg}">
+            <Border x:Name="TabBorder" Background="{TemplateBinding Background}"
+                    BorderBrush="{StaticResource BorderBg}" BorderThickness="1"
+                    Padding="{TemplateBinding Padding}"
+                    TextElement.Foreground="{TemplateBinding Foreground}">
               <ContentPresenter ContentSource="Header"/>
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBg}"/>
+                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource PanelRaised}"/>
+                <Setter Property="Background" Value="{StaticResource PanelRaised}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
-
-    <!-- DataGrid -->
     <Style TargetType="DataGrid">
       <Setter Property="Background" Value="{StaticResource PanelBg}"/>
       <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
       <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
-      <Setter Property="RowBackground" Value="#FF252526"/>
-      <Setter Property="AlternatingRowBackground" Value="#FF2A2A2C"/>
+      <Setter Property="RowBackground" Value="{StaticResource PanelBg}"/>
+      <Setter Property="AlternatingRowBackground" Value="{StaticResource PanelRaised}"/>
       <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-      <Setter Property="HorizontalGridLinesBrush" Value="#FF333336"/>
+      <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderBg}"/>
       <Setter Property="RowHeaderWidth" Value="0"/>
       <Setter Property="IsReadOnly" Value="True"/>
       <Setter Property="AutoGenerateColumns" Value="False"/>
@@ -98,34 +112,17 @@
       <Setter Property="HeadersVisibility" Value="Column"/>
     </Style>
     <Style TargetType="DataGridColumnHeader">
-      <Setter Property="Background" Value="{StaticResource HeaderBg}"/>
-      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
-      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="Background" Value="{StaticResource SidebarBg}"/>
+      <Setter Property="Foreground" Value="{StaticResource SubtleFg}"/>
+      <Setter Property="Padding" Value="8,6"/>
       <Setter Property="BorderBrush" Value="{StaticResource BorderBg}"/>
       <Setter Property="BorderThickness" Value="0,0,1,1"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
-    <Style TargetType="DataGridRow">
-      <Setter Property="Foreground" Value="{Binding RowBrush}"/>
-    </Style>
     <Style TargetType="DataGridCell">
-      <Setter Property="Foreground" Value="{Binding RowBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource TextFg}"/>
       <Setter Property="BorderBrush" Value="Transparent"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="DataGridCell">
-            <Border Background="{TemplateBinding Background}" Padding="6,3">
-              <ContentPresenter VerticalAlignment="Center"/>
-            </Border>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-      <Style.Triggers>
-        <Trigger Property="IsSelected" Value="True">
-          <Setter Property="Background" Value="#FF094771"/>
-        </Trigger>
-      </Style.Triggers>
+      <Setter Property="Padding" Value="5,3"/>
     </Style>
-
   </Application.Resources>
 </Application>

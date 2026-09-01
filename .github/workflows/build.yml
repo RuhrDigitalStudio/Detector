@@ -1,0 +1,22 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore Detector.slnx
+      - run: dotnet build Detector.slnx -c Release --no-restore
+      - run: dotnet test Detector.slnx -c Release --no-build
+      - run: dotnet format Detector.slnx --verify-no-changes --no-restore
