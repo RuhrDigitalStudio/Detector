@@ -66,10 +66,7 @@ public sealed class AnalysisCaseTests
 
         Assert.Equal(AnalysisCase.CurrentSchemaVersion, restored.SchemaVersion);
         Assert.Equal(original.CaseId, restored.CaseId);
-        Assert.Equal(original.Artifacts, restored.Artifacts);
-        Assert.Equal(original.Findings, restored.Findings);
-        Assert.Equal(original.Indicators, restored.Indicators);
-        Assert.Equal(original.Coverage, restored.Coverage);
+        Assert.Equal(CaseExporter.ToJson(original), CaseExporter.ToJson(restored));
     }
 
     [Fact]

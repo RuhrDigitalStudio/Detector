@@ -41,6 +41,15 @@ public enum CoverageState
     Failed
 }
 
+public sealed record PeSectionProfile(
+    string Name,
+    int VirtualSize,
+    int RawSize,
+    double Entropy,
+    string Characteristics);
+
+public sealed record ApiReference(string Family, string Member, string Evidence);
+
 public sealed record ArtifactProfile(
     string Id,
     string DisplayName,
@@ -57,6 +66,28 @@ public sealed record ArtifactProfile(
     public string? EntryPoint { get; init; }
 
     public string? Trust { get; init; }
+
+    public double Entropy { get; init; }
+
+    public string? AssemblyName { get; init; }
+
+    public string? AssemblyVersion { get; init; }
+
+    public string? Subsystem { get; init; }
+
+    public DateTimeOffset? PeTimestamp { get; init; }
+
+    public IReadOnlyList<PeSectionProfile> Sections { get; init; } = [];
+
+    public IReadOnlyList<string> AssemblyReferences { get; init; } = [];
+
+    public IReadOnlyList<string> DeclaredTypes { get; init; } = [];
+
+    public IReadOnlyList<string> DeclaredMethods { get; init; } = [];
+
+    public IReadOnlyList<string> NativeImports { get; init; } = [];
+
+    public IReadOnlyList<ApiReference> ApiReferences { get; init; } = [];
 }
 
 public sealed class Indicator : IEquatable<Indicator>

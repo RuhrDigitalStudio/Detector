@@ -115,10 +115,17 @@ public static class CaseExporter
         foreach (var artifact in report.Artifacts)
         {
             if (artifact is null) throw new InvalidDataException("The artifact collection contains null.");
+            if (artifact.Sections is null || artifact.AssemblyReferences is null || artifact.DeclaredTypes is null ||
+                artifact.DeclaredMethods is null || artifact.NativeImports is null || artifact.ApiReferences is null)
+                throw new InvalidDataException("An artifact metadata collection is null.");
             CheckText(artifact.Id, limits, "artifact id");
             CheckText(artifact.DisplayName, limits, "artifact name");
             CheckText(artifact.Sha256, limits, "artifact hash");
             if (artifact.Size < 0) throw new InvalidDataException("An artifact size is negative.");
+            if (artifact.Sections.Count > limits.MaximumPeSections || artifact.AssemblyReferences.Count > limits.MaximumMetadataItems ||
+                artifact.DeclaredTypes.Count > limits.MaximumMetadataItems || artifact.DeclaredMethods.Count > limits.MaximumMetadataItems ||
+                artifact.NativeImports.Count > limits.MaximumMetadataItems || artifact.ApiReferences.Count > limits.MaximumMetadataItems)
+                throw new AnalysisLimitException("An artifact exceeds a metadata collection limit.");
         }
         foreach (var finding in report.Findings)
         {

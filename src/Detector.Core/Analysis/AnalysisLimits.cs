@@ -20,6 +20,14 @@ public sealed record AnalysisLimits
 
     public int MaximumTextLength { get; init; } = 16_384;
 
+    public long MaximumDeepArtifactBytes { get; init; } = 64L * 1024 * 1024;
+
+    public int MaximumSourceBytes { get; init; } = 4 * 1024 * 1024;
+
+    public int MaximumPeSections { get; init; } = 96;
+
+    public int MaximumMetadataItems { get; init; } = 20_000;
+
     public int MaximumReportJsonCharacters { get; init; } = 16 * 1024 * 1024;
 }
 
