@@ -134,6 +134,25 @@ public sealed class AnalysisCaseTests
             new TimelineEvent(CreatedAt, "Synthetic", "ProcessCreate", 42, "sample", properties)));
     }
 
+    [Fact]
+    public void Html_IncludesRuntimeTimelineEvidence()
+    {
+        var builder = NewBuilder();
+        builder.AddTimelineEvent(new TimelineEvent(
+            CreatedAt,
+            "Synthetic provider",
+            "ProcessCreate",
+            42,
+            "sample",
+            new Dictionary<string, string> { ["CommandLine"] = "sample.exe --test" }));
+
+        var html = CaseExporter.ToHtml(builder.Build());
+
+        Assert.Contains("Timeline", html, StringComparison.Ordinal);
+        Assert.Contains("ProcessCreate", html, StringComparison.Ordinal);
+        Assert.Contains("sample.exe --test", html, StringComparison.Ordinal);
+    }
+
     private static AnalysisCaseBuilder NewBuilder(string title = "Synthetic case") =>
         new("case-1", title, CreatedAt);
 }

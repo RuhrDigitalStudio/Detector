@@ -28,6 +28,12 @@ public sealed record AnalysisLimits
 
     public int MaximumMetadataItems { get; init; } = 20_000;
 
+    public int MaximumRuntimeTraceCharacters { get; init; } = 64 * 1024 * 1024;
+
+    public int MaximumRuntimeLineCharacters { get; init; } = 1 * 1024 * 1024;
+
+    public int MaximumRuntimeErrors { get; init; } = 1_000;
+
     public int MaximumReportJsonCharacters { get; init; } = 16 * 1024 * 1024;
 }
 

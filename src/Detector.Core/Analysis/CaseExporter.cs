@@ -58,6 +58,7 @@ public static class CaseExporter
         AppendArtifacts(html, report, H);
         AppendFindings(html, report, H);
         AppendIndicators(html, report, H);
+        AppendTimeline(html, report, H);
         AppendCoverage(html, report, H);
         html.Append("</body></html>");
         return html.ToString();
@@ -107,6 +108,20 @@ public static class CaseExporter
             html.Append("<tr><td>").Append(h(item.Module)).Append("</td><td class=\"")
                 .Append(item.State == CoverageState.Completed ? string.Empty : "gap").Append("\">")
                 .Append(h(item.State.ToString())).Append("</td><td>").Append(h(item.Details)).Append("</td></tr>");
+        html.Append("</tbody></table>");
+    }
+
+    private static void AppendTimeline(StringBuilder html, AnalysisCase report, Func<string?, string> h)
+    {
+        html.Append("<h2>Timeline</h2><table><thead><tr><th>Time</th><th>Provider</th><th>Event</th><th>Process</th><th>Properties</th></tr></thead><tbody>");
+        foreach (var item in report.Timeline)
+        {
+            var properties = string.Join("; ", item.Properties.Select(property => $"{property.Key}={property.Value}"));
+            var process = item.ProcessId is int pid ? $"{item.ProcessName ?? "unknown"} ({pid})" : item.ProcessName;
+            html.Append("<tr><td>").Append(h(item.Timestamp?.ToString("O"))).Append("</td><td>").Append(h(item.Provider))
+                .Append("</td><td>").Append(h(item.Event)).Append("</td><td>").Append(h(process))
+                .Append("</td><td>").Append(h(properties)).Append("</td></tr>");
+        }
         html.Append("</tbody></table>");
     }
 

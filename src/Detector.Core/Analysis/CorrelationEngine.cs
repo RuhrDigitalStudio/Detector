@@ -50,13 +50,14 @@ public static class CorrelationEngine
 
     private static void AddInjection(List<Capability> capabilities, ISet<string> rules)
     {
-        var direct = rules.Contains("runpe.unbacked-exec-pe");
+        var direct = rules.Contains("runpe.unbacked-exec-pe") || rules.Contains("runtime.process-tampering");
         var signalGroups = new[] { ProcessAccess, MemoryAllocation, MemoryWrite, RemoteExecution };
         var signalCount = signalGroups.Count(group => group.Any(rules.Contains));
         var primitive = rules.Contains("ps.injection-api");
         if (!direct && signalCount < 2 && !primitive) return;
         var supporting = signalGroups.SelectMany(group => group).Append("runpe.unbacked-exec-pe")
-            .Append("ps.injection-api").Where(rules.Contains).Distinct().Order().ToArray();
+            .Append("runtime.process-tampering").Append("ps.injection-api")
+            .Where(rules.Contains).Distinct().Order().ToArray();
         var confidence = direct || signalCount >= 3
             ? Confidence.High
             : signalCount == 2 ? Confidence.Medium : Confidence.Low;

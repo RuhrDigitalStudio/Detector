@@ -90,7 +90,11 @@ public sealed class AnalysisCaseBuilder
             ValidateText(property.Key, "timeline property name");
             ValidateText(property.Value, "timeline property value");
         }
-        _timeline.Add(timelineEvent);
+        _timeline.Add(timelineEvent with
+        {
+            Properties = timelineEvent.Properties.OrderBy(item => item.Key, StringComparer.Ordinal)
+                .ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal)
+        });
     }
 
     public void AddCoverage(string module, CoverageState state, string details)

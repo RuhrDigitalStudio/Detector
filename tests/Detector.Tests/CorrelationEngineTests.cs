@@ -32,6 +32,16 @@ public sealed class CorrelationEngineTests
     }
 
     [Fact]
+    public void Correlate_TreatsProviderReportedProcessTamperingAsStrongEvidence()
+    {
+        var capabilities = CorrelationEngine.Correlate(
+            [Finding("runtime.process-tampering", Severity.Critical, Verdict.Malicious)]);
+
+        Assert.Contains(capabilities, item =>
+            item.Id == "capability.process-injection" && item.Confidence == Confidence.High);
+    }
+
+    [Fact]
     public void Correlate_GroupsScriptCapabilitiesWithExplicitConfidence()
     {
         var findings = new[]
