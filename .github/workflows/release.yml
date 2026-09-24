@@ -1,8 +1,12 @@
 name: release
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing v* tag to release
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,7 +15,14 @@ jobs:
   package:
     runs-on: windows-latest
     steps:
+      - name: Validate release tag
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: if ($env:RELEASE_TAG -notmatch '^v[0-9][A-Za-z0-9._-]*$') { throw 'Expected an existing v* tag' }
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release_tag }}
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
@@ -31,4 +42,5 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" artifacts/*.zip artifacts/SHA256SUMS.txt --verify-tag --generate-notes --title "Detector ${{ github.ref_name }}"
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: gh release create "$env:RELEASE_TAG" artifacts/*.zip artifacts/SHA256SUMS.txt --verify-tag --generate-notes --title "Detector $env:RELEASE_TAG"
